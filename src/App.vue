@@ -17,6 +17,7 @@
             <el-menu-item index="/history">历史</el-menu-item>
             <el-menu-item index="/progress">进度</el-menu-item>
             <el-menu-item index="/summary">总结</el-menu-item>
+            <el-menu-item index="/settings">设置</el-menu-item>
           </el-menu>
         </div>
       </el-header>

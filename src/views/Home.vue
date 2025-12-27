@@ -41,6 +41,7 @@
       <template #header>
         <div class="card-header">
           <span>English Translation</span>
+          <span class="voice-info">🎙️ {{ voiceStore.settings.selectedVoice }}</span>
         </div>
       </template>
       
@@ -108,7 +109,7 @@
           <div class="recent-chinese">{{ item.chineseText }}</div>
           <div class="recent-english">{{ item.englishText }}</div>
           <div class="recent-actions">
-            <el-button size="small" circle @click="speak(item.englishText)">
+            <el-button size="small" circle @click="handlePlayRecent(item.englishText)">
               <el-icon><VideoPlay /></el-icon>
             </el-button>
           </div>
@@ -125,11 +126,13 @@ import { VideoPlay, CopyDocument, Star, DocumentAdd } from '@element-plus/icons-
 import { useTranslationStore } from '@/stores/translation'
 import { useHistoryStore } from '@/stores/history'
 import { useProgressStore } from '@/stores/progress'
+import { useVoiceStore } from '@/stores/voice'
 import { speechService } from '@/services/speech'
 
 const translationStore = useTranslationStore()
 const historyStore = useHistoryStore()
 const progressStore = useProgressStore()
+const voiceStore = useVoiceStore()
 
 const inputText = ref('')
 const selectedCategory = ref('日常')
@@ -151,8 +154,20 @@ async function handleTranslate() {
 
 function handlePlay() {
   if (translationStore.currentTranslation) {
-    translationStore.speak(translationStore.currentTranslation.englishText)
+    speechService.speak(translationStore.currentTranslation.englishText, {
+      voiceName: voiceStore.settings.selectedVoice,
+      rate: voiceStore.settings.rate,
+      pitch: voiceStore.settings.pitch
+    })
   }
+}
+
+function handlePlayRecent(text: string) {
+  speechService.speak(text, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch
+  })
 }
 
 function handleCopy() {
@@ -173,7 +188,7 @@ async function handleSave() {
   if (translationStore.currentTranslation) {
     try {
       const saved = await translationStore.saveTranslation(translationStore.currentTranslation)
-      translationStore.currentTranslation.id = saved.id
+      translationStore.currentTranslation.id = saved.id as number
       await progressStore.addTranslation(saved)
       await progressStore.updateTodayCount()
       await loadRecentTranslations()
@@ -185,7 +200,11 @@ async function handleSave() {
 }
 
 function handleWordClick(word: string) {
-  speechService.speak(word)
+  speechService.speak(word, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch
+  })
 }
 
 async function loadRecentTranslations() {
@@ -215,6 +234,14 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.voice-info {
+  font-size: 12px;
+  color: #909399;
+  background: #f0f9ff;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .input-actions {

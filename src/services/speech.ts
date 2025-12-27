@@ -1,24 +1,50 @@
 export class SpeechService {
   private synth = window.speechSynthesis
   private voices: SpeechSynthesisVoice[] = []
+  private voicesLoaded = false
+  private onVoicesLoadedCallbacks: (() => void)[] = []
 
   constructor() {
-    this.loadVoices()
+    setTimeout(() => {
+      this.loadVoices()
+      console.log('Initial loadVoices called')
+    }, 1000)
     if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = () => this.loadVoices()
+      speechSynthesis.onvoiceschanged = () => {
+        this.loadVoices()
+        console.log('onvoiceschanged event fired')
+      }
     }
   }
 
   private loadVoices() {
-    this.voices = this.synth.getVoices().filter(
-      voice => voice.lang.startsWith('en')
+    const allVoices = this.synth.getVoices()
+    this.voices = allVoices.filter(
+      voice => voice.lang.startsWith('en') || voice.lang.startsWith('zh')
     )
+    
+    console.log('Loaded voices:', this.voices.length)
+    console.log('All voices:', allVoices.length)
+    
+    if (!this.voicesLoaded && this.voices.length > 0) {
+      this.voicesLoaded = true
+      this.onVoicesLoadedCallbacks.forEach(callback => callback())
+      this.onVoicesLoadedCallbacks = []
+    }
+  }
+
+  onVoicesLoaded(callback: () => void) {
+    if (this.voicesLoaded) {
+      callback()
+    } else {
+      this.onVoicesLoadedCallbacks.push(callback)
+    }
   }
 
   speak(text: string, options: {
     rate?: number
     pitch?: number
-    voiceIndex?: number
+    voiceName?: string
   } = {}) {
     this.stop()
 
@@ -27,8 +53,13 @@ export class SpeechService {
     utterance.rate = options.rate || 0.8
     utterance.pitch = options.pitch || 1
     
-    if (this.voices.length > 0) {
-      utterance.voice = this.voices[options.voiceIndex || 0]
+    if (options.voiceName) {
+      const voice = this.getVoiceByName(options.voiceName)
+      if (voice) {
+        utterance.voice = voice
+      }
+    } else if (this.voices.length > 0) {
+      utterance.voice = this.voices[0]
     }
 
     this.synth.speak(utterance)
@@ -48,6 +79,94 @@ export class SpeechService {
 
   getVoices(): SpeechSynthesisVoice[] {
     return this.voices
+  }
+
+  getVoicesByLang(lang: string): SpeechSynthesisVoice[] {
+    return this.voices.filter(voice => voice.lang === lang)
+  }
+
+  getVoiceByName(name: string): SpeechSynthesisVoice | undefined {
+    return this.voices.find(voice => voice.name === name)
+  }
+
+  getRecommendedVoices(): { name: string, lang: string, label: string }[] {
+    const recommended: { name: string, lang: string, label: string }[] = []
+    
+    if (this.voices.length === 0) {
+      console.warn('No voices available')
+      return []
+    }
+    
+    console.log('All voices:', this.voices.length)
+    
+    const englishVoices = this.voices.filter(v => v.lang.startsWith('en'))
+    const chineseVoices = this.voices.filter(v => v.lang.startsWith('zh'))
+    const otherVoices = this.voices.filter(v => !v.lang.startsWith('en') && !v.lang.startsWith('zh'))
+    
+    console.log('English voices:', englishVoices.length)
+    console.log('Chinese voices:', chineseVoices.length)
+    console.log('Other voices:', otherVoices.length)
+    
+    const priorityNames = [
+      'Google US English',
+      'Microsoft David',
+      'Microsoft Zira',
+      'Microsoft Aria',
+      'Microsoft Mark',
+      'Google UK English Male',
+      'Google UK English Female',
+      'Microsoft Hazel',
+      'Microsoft George',
+      'Microsoft Susan'
+    ]
+
+    priorityNames.forEach(name => {
+      const voice = this.getVoiceByName(name)
+      if (voice) {
+        const isUS = voice.lang === 'en-US'
+        recommended.push({
+          name: voice.name,
+          lang: voice.lang,
+          label: `${isUS ? '🇺🇸' : '🇬🇧'} ${voice.name}`
+        })
+      }
+    })
+
+    if (englishVoices.length > 0) {
+      englishVoices.forEach(voice => {
+        if (!recommended.find(r => r.name === voice.name)) {
+          const isUS = voice.lang === 'en-US'
+          recommended.push({
+            name: voice.name,
+            lang: voice.lang,
+            label: `${isUS ? '🇺🇸' : '🇬🇧'} ${voice.name}`
+          })
+        }
+      })
+    }
+
+    if (chineseVoices.length > 0) {
+      chineseVoices.forEach(voice => {
+        recommended.push({
+          name: voice.name,
+          lang: voice.lang,
+          label: `🇨🇳 ${voice.name}`
+        })
+      })
+    }
+
+    if (otherVoices.length > 0) {
+      otherVoices.forEach(voice => {
+        recommended.push({
+          name: voice.name,
+          lang: voice.lang,
+          label: `${voice.lang} ${voice.name}`
+        })
+      })
+    }
+
+    console.log('Recommended voices:', recommended)
+    return recommended
   }
 }
 

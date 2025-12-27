@@ -157,10 +157,12 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, ArrowRight, VideoPlay, Share, Refresh } from '@element-plus/icons-vue'
 import { useSummaryStore } from '@/stores/summary'
+import { useVoiceStore } from '@/stores/voice'
 import { db } from '@/services/db'
 import { speechService } from '@/services/speech'
 
 const summaryStore = useSummaryStore()
+const voiceStore = useVoiceStore()
 
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const todayTranslations = ref<any[]>([])
@@ -172,7 +174,7 @@ const isToday = computed(() => {
 })
 
 const progressIndex = computed(() => {
-  return currentSummary.value ? currentSummary.value.progressIndex : 0
+  return currentSummary.value?.progressIndex ?? 0
 })
 
 async function loadSummary() {
@@ -200,28 +202,33 @@ function changeDate(delta: number) {
 }
 
 function handlePlay(text: string) {
-  speechService.speak(text)
+  speechService.speak(text, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch
+  })
 }
 
 function handleShare() {
   if (!currentSummary.value) return
 
+  const summary = currentSummary.value
   const text = `
 📅 ${selectedDate.value} 学习总结
 
 📊 学习数据
-- 输入条数：${currentSummary.value.translationCount}条
-- 新学词汇：${currentSummary.value.newWords}个
-- 播放次数：${currentSummary.value.playCount}次
-- 学习时长：${currentSummary.value.studyTime}分钟
+- 输入条数：${summary.translationCount}条
+- 新学词汇：${summary.newWords}个
+- 播放次数：${summary.playCount}次
+- 学习时长：${summary.studyTime}分钟
 
 🎯 今日重点
-- 最常用表达：${currentSummary.value.topExpression || '无'}
-- 新学场景：${currentSummary.value.newScenarios.join(', ') || '无'}
-- 进步指数：${'⭐'.repeat(currentSummary.value.progressIndex + 1)}
+- 最常用表达：${summary.topExpression || '无'}
+- 新学场景：${summary.newScenarios.join(', ') || '无'}
+- 进步指数：${'⭐'.repeat(summary.progressIndex + 1)}
 
 💡 学习建议
-${currentSummary.value.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+${summary.suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}
   `.trim()
 
   navigator.clipboard.writeText(text)

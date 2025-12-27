@@ -73,9 +73,11 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, VideoPlay, Star, Delete } from '@element-plus/icons-vue'
 import { useHistoryStore } from '@/stores/history'
+import { useVoiceStore } from '@/stores/voice'
 import { speechService } from '@/services/speech'
 
 const historyStore = useHistoryStore()
+const voiceStore = useVoiceStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref('全部')
@@ -94,7 +96,11 @@ async function handleFilter() {
 }
 
 function handlePlay(text: string) {
-  speechService.speak(text)
+  speechService.speak(text, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch
+  })
 }
 
 async function handleToggleFavorite(id: number) {
