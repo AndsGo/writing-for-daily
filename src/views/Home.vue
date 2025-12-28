@@ -48,7 +48,14 @@
       </template>
       
       <div class="translation-result">
-        {{ translationStore.currentTranslation.englishText }}
+        <span
+          v-for="(word, index) in currentWords"
+          :key="index"
+          :class="['word-item', { 'word-highlight': index === currentWordIndex }]"
+          @click="handleWordClick(word)"
+        >
+          {{ word }}
+        </span>
       </div>
       
       <div class="result-actions">
@@ -109,9 +116,18 @@
           class="recent-item"
         >
           <div class="recent-chinese">{{ item.chineseText }}</div>
-          <div class="recent-english">{{ item.englishText }}</div>
+          <div class="recent-english">
+            <span
+              v-for="(word, index) in item.words"
+              :key="index"
+              :class="['word-item', { 'word-highlight': item.currentWordIndex === index }]"
+              @click="handleWordClick(word)"
+            >
+              {{ word }}
+            </span>
+          </div>
           <div class="recent-actions">
-            <el-button size="small" circle @click="handlePlayRecent(item.englishText)">
+            <el-button size="small" circle @click="handlePlayRecent(item)">
               <el-icon><VideoPlay /></el-icon>
             </el-button>
           </div>
@@ -122,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { VideoPlay, CopyDocument, Star, DocumentAdd } from '@element-plus/icons-vue'
 import { useTranslationStore } from '@/stores/translation'
@@ -139,6 +155,12 @@ const voiceStore = useVoiceStore()
 const inputText = ref('')
 const selectedCategory = ref('日常')
 const recentTranslations = ref<any[]>([])
+const currentWordIndex = ref(-1)
+
+const currentWords = computed(() => {
+  if (!translationStore.currentTranslation) return []
+  return translationStore.currentTranslation.englishText.split(/\s+/)
+})
 
 async function handleTranslate() {
   if (!inputText.value.trim()) return
@@ -156,19 +178,33 @@ async function handleTranslate() {
 
 function handlePlay() {
   if (translationStore.currentTranslation) {
+    currentWordIndex.value = -1
     speechService.speak(translationStore.currentTranslation.englishText, {
       voiceName: voiceStore.settings.selectedVoice,
       rate: voiceStore.settings.rate,
-      pitch: voiceStore.settings.pitch
+      pitch: voiceStore.settings.pitch,
+      onWordBoundary: (wordIndex: number) => {
+        currentWordIndex.value = wordIndex
+      },
+      onEnd: () => {
+        currentWordIndex.value = -1
+      }
     })
   }
 }
 
-function handlePlayRecent(text: string) {
-  speechService.speak(text, {
+function handlePlayRecent(item: any) {
+  item.currentWordIndex = -1
+  speechService.speak(item.englishText, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
-    pitch: voiceStore.settings.pitch
+    pitch: voiceStore.settings.pitch,
+    onWordBoundary: (wordIndex: number) => {
+      item.currentWordIndex = wordIndex
+    },
+    onEnd: () => {
+      item.currentWordIndex = -1
+    }
   })
 }
 
@@ -211,7 +247,11 @@ function handleWordClick(word: string) {
 
 async function loadRecentTranslations() {
   await historyStore.loadTranslations(3)
-  recentTranslations.value = historyStore.translations
+  recentTranslations.value = historyStore.translations.map(t => ({
+    ...t,
+    words: t.englishText.split(/\s+/),
+    currentWordIndex: -1
+  }))
 }
 
 onMounted(async () => {
@@ -273,6 +313,25 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
+.word-item {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.word-item:hover {
+  background: #e0f2fe;
+}
+
+.word-highlight {
+  background: #bae6fd;
+  color: #0c4a6e;
+  font-weight: 600;
+}
+
 .result-actions {
   margin-top: 16px;
   display: flex;
@@ -317,6 +376,10 @@ onMounted(async () => {
 .recent-english {
   color: #4a90e2;
   font-size: 14px;
+  line-height: 1.8;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
 }
 
 .recent-actions {

@@ -45,6 +45,8 @@ export class SpeechService {
     rate?: number
     pitch?: number
     voiceName?: string
+    onWordBoundary?: (wordIndex: number, word: string) => void
+    onEnd?: () => void
   } = {}) {
     this.stop()
 
@@ -60,6 +62,33 @@ export class SpeechService {
       }
     } else if (this.voices.length > 0) {
       utterance.voice = this.voices[0]
+    }
+
+    if (options.onWordBoundary) {
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          const words = text.split(/\s+/)
+          const charIndex = event.charIndex
+          let wordIndex = 0
+          let currentIndex = 0
+
+          for (let i = 0; i < words.length; i++) {
+            if (currentIndex === charIndex) {
+              wordIndex = i
+              break
+            }
+            currentIndex += words[i].length + 1
+          }
+
+          options.onWordBoundary(wordIndex, words[wordIndex])
+        }
+      }
+    }
+
+    if (options.onEnd) {
+      utterance.onend = () => {
+        options.onEnd()
+      }
     }
 
     this.synth.speak(utterance)

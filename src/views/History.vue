@@ -41,7 +41,16 @@
       >
         <div class="history-content">
           <div class="history-chinese">{{ item.chineseText }}</div>
-          <div class="history-english">{{ item.englishText }}</div>
+          <div class="history-english">
+            <span
+              v-for="(word, index) in item.words"
+              :key="index"
+              :class="['word-item', { 'word-highlight': item.currentWordIndex === index }]"
+              @click="handleWordClick(word)"
+            >
+              {{ word }}
+            </span>
+          </div>
           <div class="history-meta">
             <el-tag size="small">{{ item.category }}</el-tag>
             <span class="history-time">{{ formatTime(item.createdAt as string) }}</span>
@@ -49,7 +58,7 @@
         </div>
         
         <div class="history-actions">
-          <el-button size="small" circle @click="handlePlay(item.englishText)">
+          <el-button size="small" circle @click="handlePlay(item)">
             <el-icon><VideoPlay /></el-icon>
           </el-button>
           <el-button 
@@ -96,8 +105,23 @@ async function handleFilter() {
   await filterByCategory(selectedCategory.value)
 }
 
-function handlePlay(text: string) {
-  speechService.speak(text, {
+function handlePlay(item: any) {
+  item.currentWordIndex = -1
+  speechService.speak(item.englishText, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch,
+    onWordBoundary: (wordIndex: number) => {
+      item.currentWordIndex = wordIndex
+    },
+    onEnd: () => {
+      item.currentWordIndex = -1
+    }
+  })
+}
+
+function handleWordClick(word: string) {
+  speechService.speak(word, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
     pitch: voiceStore.settings.pitch
@@ -209,6 +233,29 @@ onMounted(async () => {
 .history-english {
   color: #4a90e2;
   font-size: 16px;
+  line-height: 1.8;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.word-item {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.word-item:hover {
+  background: #e0f2fe;
+}
+
+.word-highlight {
+  background: #bae6fd;
+  color: #0c4a6e;
+  font-weight: 600;
 }
 
 .history-meta {

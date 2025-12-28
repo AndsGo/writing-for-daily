@@ -130,8 +130,17 @@
             class="record-item"
           >
             <div class="record-chinese">{{ item.chineseText }}</div>
-            <div class="record-english">{{ item.englishText }}</div>
-            <el-button size="small" circle @click="handlePlay(item.englishText)">
+            <div class="record-english">
+              <span
+                v-for="(word, index) in item.words"
+                :key="index"
+                :class="['word-item', { 'word-highlight': item.currentWordIndex === index }]"
+                @click="handleWordClick(word)"
+              >
+                {{ word }}
+              </span>
+            </div>
+            <el-button size="small" circle @click="handlePlay(item)">
               <el-icon><VideoPlay /></el-icon>
             </el-button>
           </div>
@@ -174,7 +183,9 @@ const isToday = computed(() => {
 })
 
 const progressIndex = computed(() => {
-  return currentSummary.value?.progressIndex ?? 0
+  const summary = currentSummary.value
+  if (!summary) return 0
+  return summary.progressIndex
 })
 
 async function loadSummary() {
@@ -186,12 +197,18 @@ async function loadTodayTranslations() {
   const startOfDay = new Date(selectedDate.value + 'T00:00:00')
   const endOfDay = new Date(selectedDate.value + 'T23:59:59')
 
-  todayTranslations.value = await db.translations
+  const translations = await db.translations
     .where('createdAt')
     .between(startOfDay, endOfDay)
     .reverse()
     .limit(5)
     .toArray()
+
+  todayTranslations.value = translations.map(t => ({
+    ...t,
+    words: t.englishText.split(/\s+/),
+    currentWordIndex: -1
+  }))
 }
 
 function changeDate(delta: number) {
@@ -201,10 +218,27 @@ function changeDate(delta: number) {
   loadSummary()
 }
 
-function handlePlay(text: string) {
+function handlePlay(item: any) {
   if (!voiceStore.settings.selectedVoice) return
   
-  speechService.speak(text, {
+  item.currentWordIndex = -1
+  speechService.speak(item.englishText, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch,
+    onWordBoundary: (wordIndex: number) => {
+      item.currentWordIndex = wordIndex
+    },
+    onEnd: () => {
+      item.currentWordIndex = -1
+    }
+  })
+}
+
+function handleWordClick(word: string) {
+  if (!voiceStore.settings.selectedVoice) return
+  
+  speechService.speak(word, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
     pitch: voiceStore.settings.pitch
@@ -212,9 +246,9 @@ function handlePlay(text: string) {
 }
 
 function handleShare() {
-  if (!currentSummary.value) return
-
   const summary = currentSummary.value
+  if (!summary) return
+
   const text = `
 📅 ${selectedDate.value} 学习总结
 
@@ -373,6 +407,29 @@ onMounted(async () => {
 .record-english {
   color: #4a90e2;
   font-size: 14px;
+  line-height: 1.8;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.word-item {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.word-item:hover {
+  background: #e0f2fe;
+}
+
+.word-highlight {
+  background: #bae6fd;
+  color: #0c4a6e;
+  font-weight: 600;
 }
 
 .actions {

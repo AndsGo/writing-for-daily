@@ -10,11 +10,16 @@ export const useHistoryStore = defineStore('history', () => {
   async function loadTranslations(limit: number = 50) {
     loading.value = true
     try {
-      translations.value = await db.translations
+      const result = await db.translations
         .orderBy('createdAt')
         .reverse()
         .limit(limit)
         .toArray()
+      translations.value = result.map(t => ({
+        ...t,
+        words: t.englishText.split(/\s+/),
+        currentWordIndex: -1
+      }))
     } finally {
       loading.value = false
     }
@@ -24,10 +29,15 @@ export const useHistoryStore = defineStore('history', () => {
     loading.value = true
     try {
       const all = await db.translations.toArray()
-      translations.value = all.filter(t => 
+      const result = all.filter(t => 
         t.chineseText.includes(query) || 
         t.englishText.toLowerCase().includes(query.toLowerCase())
       )
+      translations.value = result.map(t => ({
+        ...t,
+        words: t.englishText.split(/\s+/),
+        currentWordIndex: -1
+      }))
     } finally {
       loading.value = false
     }
@@ -39,11 +49,16 @@ export const useHistoryStore = defineStore('history', () => {
       if (category === '全部') {
         await loadTranslations()
       } else {
-        translations.value = await db.translations
+        const result = await db.translations
           .where('category')
           .equals(category)
           .reverse()
           .toArray()
+        translations.value = result.map(t => ({
+          ...t,
+          words: t.englishText.split(/\s+/),
+          currentWordIndex: -1
+        }))
       }
     } finally {
       loading.value = false

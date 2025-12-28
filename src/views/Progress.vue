@@ -114,6 +114,7 @@ import { db } from '@/services/db'
 const progressStore = useProgressStore()
 
 const calendarDate = ref(new Date())
+const studiedDates = ref<Set<string>>(new Set())
 
 const { progress, getAllAchievements } = progressStore
 
@@ -134,23 +135,32 @@ const streakMessage = computed(() => {
   }
 })
 
-async function hasStudiedOnDate(dateStr: string): Promise<boolean> {
-  const date = new Date(dateStr)
-  const startOfDay = new Date(date)
-  startOfDay.setHours(0, 0, 0, 0)
-  const endOfDay = new Date(date)
-  endOfDay.setHours(23, 59, 59, 999)
-
-  const count = await db.translations
+async function loadStudiedDates() {
+  const startOfMonth = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth(), 1)
+  const endOfMonth = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth() + 1, 0)
+  
+  const translations = await db.translations
     .where('createdAt')
-    .between(startOfDay, endOfDay)
-    .count()
+    .between(startOfMonth, endOfMonth)
+    .toArray()
+  
+  const dates = new Set<string>()
+  translations.forEach(t => {
+    const date = new Date(t.createdAt).toISOString().split('T')[0]
+    dates.add(date)
+  })
+  
+  studiedDates.value = dates
+}
 
-  return count > 0
+function hasStudiedOnDate(dateStr: string): boolean {
+  const date = new Date(dateStr).toISOString().split('T')[0]
+  return studiedDates.value.has(date)
 }
 
 onMounted(async () => {
   await progressStore.loadProgress()
+  await loadStudiedDates()
 })
 </script>
 
