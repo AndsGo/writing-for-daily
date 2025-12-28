@@ -235,6 +235,7 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .history {
     max-width: 100%;
+    padding-bottom: 20px;
   }
 
   .search-bar {
@@ -253,6 +254,7 @@ onMounted(async () => {
   .history-card {
     flex-direction: column;
     align-items: stretch;
+    padding: 16px;
   }
 
   .history-content {
@@ -261,7 +263,8 @@ onMounted(async () => {
 
   .history-chinese,
   .history-english {
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.6;
   }
 
   .history-meta {
@@ -269,9 +272,19 @@ onMounted(async () => {
     gap: 8px;
   }
 
+  .history-time {
+    font-size: 12px;
+  }
+
   .history-actions {
     justify-content: flex-end;
     margin-top: 12px;
+    gap: 8px;
+  }
+
+  .history-actions .el-button {
+    width: 48px;
+    height: 48px;
   }
 }
 

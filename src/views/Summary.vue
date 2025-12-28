@@ -384,6 +384,7 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .summary {
     max-width: 100%;
+    padding-bottom: 20px;
   }
 
   .date-selector {
@@ -393,7 +394,7 @@ onMounted(async () => {
 
   .date-selector .el-button {
     width: 100%;
-    height: 44px;
+    height: 48px;
   }
 
   .date-selector .el-date-picker {
@@ -406,50 +407,85 @@ onMounted(async () => {
   }
 
   .data-item {
-    padding: 16px;
+    padding: 20px;
   }
 
   .data-icon {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .data-value {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .data-label {
-    font-size: 12px;
-  }
-
-  .highlight-content {
-    gap: 12px;
-  }
-
-  .highlight-item {
-    padding: 10px;
-  }
-
-  .highlight-label {
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
-
-  .highlight-value {
     font-size: 14px;
   }
 
+  .highlight-content {
+    gap: 16px;
+  }
+
+  .highlight-item {
+    padding: 16px;
+  }
+
+  .highlight-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .highlight-value {
+    font-size: 15px;
+  }
+
   .suggestions-list {
-    gap: 8px;
+    gap: 12px;
   }
 
   .suggestion-item {
-    padding: 10px;
+    padding: 16px;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 
   .suggestion-number {
-    min-width: 20px;
+    min-width: 24px;
+    font-size: 16px;
+  }
+
+  .records-list {
+    gap: 12px;
+  }
+
+  .record-item {
+    padding: 16px;
+  }
+
+  .record-chinese {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .record-english {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .record-item .el-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .actions .el-button {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
   }
 }
 

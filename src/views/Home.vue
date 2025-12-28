@@ -331,11 +331,13 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .home {
     max-width: 100%;
+    padding-bottom: 20px;
   }
 
   .input-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .category-select {
@@ -345,22 +347,26 @@ onMounted(async () => {
   .translate-btn {
     width: 100%;
     min-width: auto;
-    height: 44px;
+    height: 48px;
+    font-size: 16px;
   }
 
   .translation-result {
     font-size: 16px;
-    padding: 12px;
+    padding: 16px;
+    line-height: 1.8;
   }
 
   .result-actions {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .result-actions .el-button {
     flex: 1;
     min-width: 0;
-    height: 44px;
+    height: 48px;
+    font-size: 14px;
   }
 
   .words-list {
@@ -369,15 +375,22 @@ onMounted(async () => {
 
   .word-tag {
     font-size: 14px;
+    padding: 8px 12px;
   }
 
   .recent-item {
-    padding: 10px;
+    padding: 16px;
   }
 
   .recent-chinese,
   .recent-english {
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .recent-actions .el-button {
+    width: 48px;
+    height: 48px;
   }
 }
 

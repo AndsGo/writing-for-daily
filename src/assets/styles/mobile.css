@@ -1,0 +1,92 @@
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, 
+textarea, 
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+button,
+.el-button,
+.el-tag {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.el-button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (max-width: 768px) {
+  .el-button--small {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+.el-input__inner,
+.el-textarea__inner {
+  font-size: 16px !important;
+}
+
+.el-card {
+  margin-bottom: 16px;
+}
+
+.el-card__header {
+  padding: 16px;
+}
+
+.el-card__body {
+  padding: 16px;
+}
+
+.el-menu-item {
+  height: 50px;
+  line-height: 50px;
+}
+
+.el-message {
+  min-width: 300px;
+}
+
+.el-dialog {
+  width: 90% !important;
+  max-width: 500px;
+}
+
+.el-drawer {
+  width: 80% !important;
+}
+
+.el-select-dropdown__item {
+  height: 44px;
+  line-height: 44px;
+}
+
+.el-tag {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.el-rate__icon {
+  font-size: 24px;
+}
+
+.el-icon {
+  vertical-align: middle;
+}
+
+.el-empty {
+  padding: 40px 0;
+}
+
+.el-skeleton {
+  padding: 16px;
+}

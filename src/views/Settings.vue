@@ -257,6 +257,7 @@ function handleReset() {
 @media (max-width: 768px) {
   .settings {
     max-width: 100%;
+    padding-bottom: 20px;
   }
 
   .settings-card {
@@ -272,11 +273,12 @@ function handleReset() {
   .loading-text,
   .empty-text {
     padding: 16px;
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .empty-text :deep(.el-alert__description) {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .empty-text :deep(ul) {
@@ -284,11 +286,12 @@ function handleReset() {
   }
 
   .empty-text :deep(li) {
-    margin: 4px 0;
+    margin: 6px 0;
+    line-height: 1.6;
   }
 
   .empty-text :deep(p) {
-    margin: 8px 0;
+    margin: 10px 0;
   }
 
   .settings-content {
@@ -297,30 +300,32 @@ function handleReset() {
 
   .setting-section {
     margin-bottom: 24px;
-    padding: 16px;
+    padding: 20px;
   }
 
   .setting-section h3 {
-    font-size: 16px;
-    margin-bottom: 16px;
+    font-size: 17px;
+    margin-bottom: 20px;
   }
 
   .slider-value {
-    font-size: 13px;
+    font-size: 14px;
+    margin-top: 12px;
   }
 
   .voice-info {
-    padding: 12px;
+    padding: 16px;
   }
 
   .setting-actions {
     flex-direction: column;
+    gap: 12px;
   }
 
   .setting-actions .el-button {
     width: 100%;
-    height: 44px;
-    margin-bottom: 8px;
+    height: 48px;
+    font-size: 16px;
   }
 }
 

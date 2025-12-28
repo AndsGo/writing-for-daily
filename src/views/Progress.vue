@@ -281,6 +281,7 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .progress {
     max-width: 100%;
+    padding-bottom: 20px;
   }
 
   .stats-grid {
@@ -289,24 +290,25 @@ onMounted(async () => {
   }
 
   .stat-item {
-    padding: 16px;
+    padding: 20px;
   }
 
   .stat-icon {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .stat-value {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .stat-label {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .streak-message {
     font-size: 14px;
     padding: 0 16px;
+    line-height: 1.6;
   }
 
   .achievements-grid {
@@ -315,32 +317,33 @@ onMounted(async () => {
   }
 
   .achievement-item {
-    padding: 12px;
+    padding: 16px;
   }
 
   .achievement-icon {
-    font-size: 20px;
+    font-size: 24px;
   }
 
   .achievement-name {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .achievement-desc {
-    font-size: 11px;
+    font-size: 13px;
+    line-height: 1.5;
   }
 
   .calendar-cell {
-    min-height: 44px;
+    min-height: 48px;
   }
 
   .calendar-date {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .calendar-dot {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 }
 

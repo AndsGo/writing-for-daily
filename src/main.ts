@@ -7,6 +7,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './assets/styles/variables.css'
+import './assets/styles/mobile.css'
 
 const app = createApp(App)
 const pinia = createPinia()
