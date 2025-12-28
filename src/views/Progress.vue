@@ -109,11 +109,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useProgressStore } from '@/stores/progress'
-import { useHistoryStore } from '@/stores/history'
 import { db } from '@/services/db'
 
 const progressStore = useProgressStore()
-const historyStore = useHistoryStore()
 
 const calendarDate = ref(new Date())
 
@@ -136,7 +134,7 @@ const streakMessage = computed(() => {
   }
 })
 
-async function hasStudiedOnDate(dateStr: string) {
+async function hasStudiedOnDate(dateStr: string): Promise<boolean> {
   const date = new Date(dateStr)
   const startOfDay = new Date(date)
   startOfDay.setHours(0, 0, 0, 0)
@@ -278,5 +276,98 @@ onMounted(async () => {
   background: #52c41a;
   border-radius: 50%;
   margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .progress {
+    max-width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-item {
+    padding: 16px;
+  }
+
+  .stat-icon {
+    font-size: 28px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .streak-message {
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .achievement-item {
+    padding: 12px;
+  }
+
+  .achievement-icon {
+    font-size: 20px;
+  }
+
+  .achievement-name {
+    font-size: 14px;
+  }
+
+  .achievement-desc {
+    font-size: 11px;
+  }
+
+  .calendar-cell {
+    min-height: 44px;
+  }
+
+  .calendar-date {
+    font-size: 12px;
+  }
+
+  .calendar-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .progress {
+    max-width: 90%;
+  }
+
+  .stats-grid {
+    gap: 16px;
+  }
+
+  .stat-item {
+    padding: 18px;
+  }
+
+  .stat-icon {
+    font-size: 30px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+  }
 }
 </style>

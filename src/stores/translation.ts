@@ -49,7 +49,7 @@ export const useTranslationStore = defineStore('translation', () => {
       createdAt: translation.createdAt,
       updatedAt: translation.updatedAt
     }
-    const id = await db.translations.add(plainTranslation)
+    const id = await db.translations.add(plainTranslation) as number
     return { ...translation, id }
   }
 

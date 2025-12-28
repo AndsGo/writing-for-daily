@@ -202,6 +202,8 @@ function changeDate(delta: number) {
 }
 
 function handlePlay(text: string) {
+  if (!voiceStore.settings.selectedVoice) return
+  
   speechService.speak(text, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
@@ -335,16 +337,17 @@ onMounted(async () => {
 }
 
 .suggestion-item {
+  display: flex;
+  gap: 8px;
   padding: 12px;
   background: #f5f5f5;
   border-radius: 8px;
-  display: flex;
-  gap: 8px;
 }
 
 .suggestion-number {
   font-weight: bold;
   color: #4a90e2;
+  min-width: 24px;
 }
 
 .records-list {
@@ -376,5 +379,91 @@ onMounted(async () => {
   display: flex;
   gap: 12px;
   justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .summary {
+    max-width: 100%;
+  }
+
+  .date-selector {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .date-selector .el-button {
+    width: 100%;
+    height: 44px;
+  }
+
+  .date-selector .el-date-picker {
+    width: 100%;
+  }
+
+  .data-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .data-item {
+    padding: 16px;
+  }
+
+  .data-icon {
+    font-size: 28px;
+  }
+
+  .data-value {
+    font-size: 24px;
+  }
+
+  .data-label {
+    font-size: 12px;
+  }
+
+  .highlight-content {
+    gap: 12px;
+  }
+
+  .highlight-item {
+    padding: 10px;
+  }
+
+  .highlight-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .highlight-value {
+    font-size: 14px;
+  }
+
+  .suggestions-list {
+    gap: 8px;
+  }
+
+  .suggestion-item {
+    padding: 10px;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .suggestion-number {
+    min-width: 20px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .summary {
+    max-width: 90%;
+  }
+
+  .data-grid {
+    gap: 16px;
+  }
+
+  .data-item {
+    padding: 18px;
+  }
 }
 </style>

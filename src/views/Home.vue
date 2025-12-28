@@ -15,10 +15,11 @@
         maxlength="200"
         show-word-limit
         @keydown.ctrl.enter="handleTranslate"
+        class="input-textarea"
       />
       
       <div class="input-actions">
-        <el-select v-model="selectedCategory" placeholder="选择场景" style="width: 150px; margin-right: 10px;">
+        <el-select v-model="selectedCategory" placeholder="选择场景" class="category-select">
           <el-option label="日常" value="日常" />
           <el-option label="工作" value="工作" />
           <el-option label="学习" value="学习" />
@@ -31,6 +32,7 @@
           :loading="translationStore.isTranslating"
           :disabled="!inputText.trim()"
           @click="handleTranslate"
+          class="translate-btn"
         >
           翻译 (Ctrl+Enter)
         </el-button>
@@ -248,6 +250,19 @@ onMounted(async () => {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+}
+
+.input-textarea {
+  font-size: 16px;
+}
+
+.category-select {
+  width: 120px;
+}
+
+.translate-btn {
+  min-width: 100px;
 }
 
 .translation-result {
@@ -311,5 +326,68 @@ onMounted(async () => {
 
 .empty-state {
   padding: 40px 0;
+}
+
+@media (max-width: 768px) {
+  .home {
+    max-width: 100%;
+  }
+
+  .input-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-select {
+    width: 100%;
+  }
+
+  .translate-btn {
+    width: 100%;
+    min-width: auto;
+    height: 44px;
+  }
+
+  .translation-result {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .result-actions {
+    flex-wrap: wrap;
+  }
+
+  .result-actions .el-button {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+  }
+
+  .words-list {
+    gap: 8px;
+  }
+
+  .word-tag {
+    font-size: 14px;
+  }
+
+  .recent-item {
+    padding: 10px;
+  }
+
+  .recent-chinese,
+  .recent-english {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .home {
+    max-width: 90%;
+  }
+
+  .category-select {
+    width: 140px;
+  }
 }
 </style>

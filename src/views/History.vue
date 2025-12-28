@@ -7,13 +7,14 @@
           placeholder="搜索中文或英语..."
           clearable
           @input="handleSearch"
+          class="search-input"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
         
-        <el-select v-model="selectedCategory" @change="handleFilter">
+        <el-select v-model="selectedCategory" @change="handleFilter" class="category-select">
           <el-option label="全部" value="全部" />
           <el-option label="日常" value="日常" />
           <el-option label="工作" value="工作" />
@@ -43,7 +44,7 @@
           <div class="history-english">{{ item.englishText }}</div>
           <div class="history-meta">
             <el-tag size="small">{{ item.category }}</el-tag>
-            <span class="history-time">{{ formatTime(item.createdAt) }}</span>
+            <span class="history-time">{{ formatTime(item.createdAt as string) }}</span>
           </div>
         </div>
         
@@ -123,8 +124,8 @@ async function handleDelete(id: number) {
   }
 }
 
-function formatTime(date: Date) {
-  const d = new Date(date)
+function formatTime(dateStr: string) {
+  const d = new Date(dateStr)
   const now = new Date()
   const diff = now.getTime() - d.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -165,8 +166,12 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.search-bar .el-input {
+.search-input {
   flex: 1;
+}
+
+.category-select {
+  width: 120px;
 }
 
 .loading-container {
@@ -220,5 +225,63 @@ onMounted(async () => {
 .history-actions {
   display: flex;
   gap: 8px;
+}
+
+.history-actions .el-button {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 768px) {
+  .history {
+    max-width: 100%;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .category-select {
+    width: 100%;
+  }
+
+  .history-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .history-content {
+    width: 100%;
+  }
+
+  .history-chinese,
+  .history-english {
+    font-size: 14px;
+  }
+
+  .history-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .history-actions {
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .history {
+    max-width: 90%;
+  }
+
+  .category-select {
+    width: 140px;
+  }
 }
 </style>

@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { VideoPlay, RefreshLeft, Refresh } from '@element-plus/icons-vue'
 import { useVoiceStore } from '@/stores/voice'
 
@@ -177,7 +177,6 @@ function handleReset() {
 .settings {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .settings-card {
@@ -253,5 +252,90 @@ function handleReset() {
   justify-content: center;
   gap: 10px;
   margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .settings {
+    max-width: 100%;
+  }
+
+  .settings-card {
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .loading-text,
+  .empty-text {
+    padding: 16px;
+    font-size: 13px;
+  }
+
+  .empty-text :deep(.el-alert__description) {
+    font-size: 13px;
+  }
+
+  .empty-text :deep(ul) {
+    padding-left: 16px;
+  }
+
+  .empty-text :deep(li) {
+    margin: 4px 0;
+  }
+
+  .empty-text :deep(p) {
+    margin: 8px 0;
+  }
+
+  .settings-content {
+    padding: 16px 0;
+  }
+
+  .setting-section {
+    margin-bottom: 24px;
+    padding: 16px;
+  }
+
+  .setting-section h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .slider-value {
+    font-size: 13px;
+  }
+
+  .voice-info {
+    padding: 12px;
+  }
+
+  .setting-actions {
+    flex-direction: column;
+  }
+
+  .setting-actions .el-button {
+    width: 100%;
+    height: 44px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .settings {
+    max-width: 90%;
+  }
+
+  .setting-section {
+    margin-bottom: 32px;
+    padding: 18px;
+  }
+
+  .setting-section h3 {
+    font-size: 17px;
+  }
 }
 </style>
