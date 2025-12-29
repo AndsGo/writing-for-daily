@@ -78,10 +78,34 @@ export const useHistoryStore = defineStore('history', () => {
     }
   }
 
+  async function loadTodayTranslations(limit: number = 5) {
+    loading.value = true
+    try {
+      const today = new Date()
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+
+      const result = await db.translations
+        .where('createdAt')
+        .between(startOfDay.toISOString(), endOfDay.toISOString())
+        .reverse()
+        .limit(limit)
+        .toArray()
+      translations.value = result.map(t => ({
+        ...t,
+        words: t.englishText.split(/\s+/),
+        currentWordIndex: -1
+      }))
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     translations,
     loading,
     loadTranslations,
+    loadTodayTranslations,
     searchTranslations,
     filterByCategory,
     deleteTranslation,

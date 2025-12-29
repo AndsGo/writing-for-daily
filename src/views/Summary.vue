@@ -134,7 +134,7 @@
               <span
                 v-for="(word, index) in item.words"
                 :key="index"
-                :class="['word-item', { 'word-highlight': item.currentWordIndex === index }]"
+                :class="['word-item', { 'word-highlight': wordIndexMap.get(item.id || 0) === index }]"
                 @click="handleWordClick(word)"
               >
                 {{ word }}
@@ -175,31 +175,33 @@ const voiceStore = useVoiceStore()
 
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const todayTranslations = ref<any[]>([])
-
-const { currentSummary, loading, generateSummary } = summaryStore
+const wordIndexMap = ref<Map<number, number>>(new Map())
 
 const isToday = computed(() => {
   return selectedDate.value === new Date().toISOString().split('T')[0]
 })
 
+const loading = computed(() => summaryStore.loading)
+const currentSummary = computed(() => summaryStore.currentSummary)
 const progressIndex = computed(() => {
-  const summary = currentSummary.value
+  const summary = summaryStore.currentSummary
   if (!summary) return 0
   return summary.progressIndex
 })
 
 async function loadSummary() {
-  await generateSummary(selectedDate.value)
+  await summaryStore.generateSummary(selectedDate.value)
   await loadTodayTranslations()
 }
 
 async function loadTodayTranslations() {
-  const startOfDay = new Date(selectedDate.value + 'T00:00:00')
-  const endOfDay = new Date(selectedDate.value + 'T23:59:59')
+  const today = new Date(selectedDate.value)
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
 
   const translations = await db.translations
     .where('createdAt')
-    .between(startOfDay, endOfDay)
+    .between(startOfDay.toISOString(), endOfDay.toISOString())
     .reverse()
     .limit(5)
     .toArray()
@@ -221,16 +223,16 @@ function changeDate(delta: number) {
 function handlePlay(item: any) {
   if (!voiceStore.settings.selectedVoice) return
   
-  item.currentWordIndex = -1
+  wordIndexMap.value.set(item.id || 0, -1)
   speechService.speak(item.englishText, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
     pitch: voiceStore.settings.pitch,
     onWordBoundary: (wordIndex: number) => {
-      item.currentWordIndex = wordIndex
+      wordIndexMap.value.set(item.id || 0, wordIndex)
     },
     onEnd: () => {
-      item.currentWordIndex = -1
+      wordIndexMap.value.set(item.id || 0, -1)
     }
   })
 }

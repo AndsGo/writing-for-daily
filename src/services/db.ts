@@ -2,9 +2,9 @@ import Dexie, { Table } from 'dexie'
 import type { Translation, Progress, DailySummary } from '@/types'
 
 export class EnglishLearningDB extends Dexie {
-  translations!: Table<Translation & { id: number }>
+  translations!: Table<Translation & { id?: number }>
   progress!: Table<Progress>
-  dailySummaries!: Table<DailySummary & { id: number }>
+  dailySummaries!: Table<DailySummary & { id?: number }>
 
   constructor() {
     super('EnglishLearningDB')

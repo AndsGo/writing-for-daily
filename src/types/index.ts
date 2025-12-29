@@ -36,3 +36,24 @@ export interface DailySummary {
   suggestions: string[]
   createdAt: string
 }
+
+export interface WordMeaning {
+  partOfSpeech: string
+  definitions: string[]
+}
+
+export interface WordDetail {
+  word: string
+  phonetic: string
+  meanings: WordMeaning[]
+  examples: string[]
+  synonyms: string[]
+  difficulty: 'easy' | 'medium' | 'hard'
+}
+
+export interface WordMastery {
+  word: string
+  familiarity: 'new' | 'learning' | 'familiar' | 'mastered'
+  reviewCount: number
+  lastReviewTime: string
+}

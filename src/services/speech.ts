@@ -95,15 +95,21 @@ export class SpeechService {
   }
 
   stop() {
-    this.synth.cancel()
+    if (this.synth) {
+      this.synth.cancel()
+    }
   }
 
   pause() {
-    this.synth.pause()
+    if (this.synth) {
+      this.synth.pause()
+    }
   }
 
   resume() {
-    this.synth.resume()
+    if (this.synth) {
+      this.synth.resume()
+    }
   }
 
   getVoices(): SpeechSynthesisVoice[] {

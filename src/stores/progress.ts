@@ -120,9 +120,15 @@ export const useProgressStore = defineStore('progress', () => {
   }
 
   function getAllAchievements() {
+    if (!progress.value) {
+      return ACHIEVEMENTS.map(a => ({
+        ...a,
+        unlocked: false
+      }))
+    }
     return ACHIEVEMENTS.map(a => ({
       ...a,
-      unlocked: progress.value.achievements.includes(a.id)
+      unlocked: (progress.value.achievements || []).includes(a.id)
     }))
   }
 

@@ -45,7 +45,7 @@
             <span
               v-for="(word, index) in item.words"
               :key="index"
-              :class="['word-item', { 'word-highlight': item.currentWordIndex === index }]"
+              :class="['word-item', { 'word-highlight': wordIndexMap.get(item.id || 0) === index }]"
               @click="handleWordClick(word)"
             >
               {{ word }}
@@ -86,36 +86,68 @@ import { useHistoryStore } from '@/stores/history'
 import { useVoiceStore } from '@/stores/voice'
 import { speechService } from '@/services/speech'
 
+interface TranslationWithWords {
+  id?: number
+  chineseText: string
+  englishText: string
+  keywords: string
+  category: string
+  playCount: number
+  isFavorite: boolean
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  words: string[]
+  currentWordIndex: number
+}
+
 const historyStore = useHistoryStore()
 const voiceStore = useVoiceStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref('全部')
-const { translations, loading, loadTranslations, searchTranslations, filterByCategory, deleteTranslation, toggleFavorite } = historyStore
+const wordIndexMap = ref<Map<number, number>>(new Map())
+const translations = ref<TranslationWithWords[]>([])
+const loading = ref(false)
 
-async function handleSearch() {
-  if (searchQuery.value.trim()) {
-    await searchTranslations(searchQuery.value)
-  } else {
-    await filterByCategory(selectedCategory.value)
+async function loadData() {
+  loading.value = true
+  try {
+    if (searchQuery.value.trim()) {
+      await historyStore.searchTranslations(searchQuery.value)
+    } else {
+      await historyStore.filterByCategory(selectedCategory.value)
+    }
+    translations.value = historyStore.translations.map(t => ({
+      ...t,
+      words: t.englishText.split(/\s+/),
+      currentWordIndex: -1
+    })) as TranslationWithWords[]
+  } finally {
+    loading.value = false
   }
 }
 
+async function handleSearch() {
+  await loadData()
+}
+
 async function handleFilter() {
-  await filterByCategory(selectedCategory.value)
+  searchQuery.value = ''
+  await loadData()
 }
 
 function handlePlay(item: any) {
-  item.currentWordIndex = -1
+  wordIndexMap.value.set(item.id || 0, -1)
   speechService.speak(item.englishText, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
     pitch: voiceStore.settings.pitch,
     onWordBoundary: (wordIndex: number) => {
-      item.currentWordIndex = wordIndex
+      wordIndexMap.value.set(item.id || 0, wordIndex)
     },
     onEnd: () => {
-      item.currentWordIndex = -1
+      wordIndexMap.value.set(item.id || 0, -1)
     }
   })
 }
@@ -129,7 +161,7 @@ function handleWordClick(word: string) {
 }
 
 async function handleToggleFavorite(id: number) {
-  await toggleFavorite(id)
+  await historyStore.toggleFavorite(id)
   ElMessage.success('收藏状态已更新')
 }
 
@@ -141,7 +173,7 @@ async function handleDelete(id: number) {
       type: 'warning'
     })
     
-    await deleteTranslation(id)
+    await historyStore.deleteTranslation(id)
     ElMessage.success('删除成功')
   } catch {
     ElMessage.info('已取消删除')
@@ -171,7 +203,7 @@ function formatTime(dateStr: string) {
 }
 
 onMounted(async () => {
-  await loadTranslations()
+  await historyStore.loadTranslations()
 })
 </script>
 
