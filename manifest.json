@@ -2,21 +2,30 @@
   "name": "英语学习助手",
   "short_name": "英语助手",
   "description": "每日英语翻译学习工具",
-  "start_url": "/",
+  "start_url": "/writing-for-daily/",
+  "scope": "/writing-for-daily/",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#4a90e2",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/writing-for-daily/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/writing-for-daily/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/writing-for-daily/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["education", "productivity"],
@@ -25,15 +34,15 @@
       "name": "翻译",
       "short_name": "翻译",
       "description": "快速翻译中文到英文",
-      "url": "/",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/writing-for-daily/",
+      "icons": [{ "src": "/writing-for-daily/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "历史记录",
       "short_name": "历史",
       "description": "查看翻译历史",
-      "url": "/history",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "url": "/writing-for-daily/#/history",
+      "icons": [{ "src": "/writing-for-daily/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
