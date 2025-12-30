@@ -297,6 +297,8 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
+    max-width: 100%;
+    margin: 0;
   }
 
   .logo {
@@ -306,6 +308,8 @@ onUnmounted(() => {
   .app-main {
     padding: 16px;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    max-width: 100%;
+    margin: 0;
   }
 
   .footer-content {
@@ -316,6 +320,8 @@ onUnmounted(() => {
     padding: 8px 16px;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     font-size: 10px;
+    max-width: 100%;
+    margin: 0;
   }
 
   .achievement-link {

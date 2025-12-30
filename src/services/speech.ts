@@ -80,14 +80,14 @@ export class SpeechService {
             currentIndex += words[i].length + 1
           }
 
-          options.onWordBoundary(wordIndex, words[wordIndex])
+          options.onWordBoundary?.(wordIndex, words[wordIndex])
         }
       }
     }
 
     if (options.onEnd) {
       utterance.onend = () => {
-        options.onEnd()
+        options.onEnd?.()
       }
     }
 

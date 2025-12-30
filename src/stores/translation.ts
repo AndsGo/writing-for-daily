@@ -23,7 +23,7 @@ export const useTranslationStore = defineStore('translation', () => {
     error.value = null
 
     try {
-      const { englishText, keywords } = await translationService.translateWithKeywords(chineseText, category)
+      const { englishText, keywords } = await translationService.translateWithKeywords(chineseText)
       
       const translation: TranslationWithWords = {
         chineseText,
@@ -40,6 +40,7 @@ export const useTranslationStore = defineStore('translation', () => {
 
       currentTranslation.value = translation
       addToRecent(translation)
+      await saveTranslation(translation)
       return translation
     } catch (err) {
       error.value = err instanceof Error ? err.message : '翻译失败'

@@ -253,7 +253,6 @@ import {
 } from '@element-plus/icons-vue'
 import { useTranslationStore } from '@/stores/translation'
 import { useHistoryStore } from '@/stores/history'
-import { useProgressStore } from '@/stores/progress'
 import { useVoiceStore } from '@/stores/voice'
 import { speechService } from '@/services/speech'
 import { speechRecognitionService } from '@/services/speech-recognition'
@@ -261,13 +260,11 @@ import { SCENE_TIPS, type SceneTip } from '@/constants/scenes'
 
 const translationStore = useTranslationStore()
 const historyStore = useHistoryStore()
-const progressStore = useProgressStore()
 const voiceStore = useVoiceStore()
 
 const inputText = ref('')
 const selectedCategory = ref('日常')
 const todayRecords = ref<any[]>([])
-const currentWordIndex = ref(-1)
 const isRecording = ref(false)
 const interimTranscript = ref('')
 const wordIndexMap = ref<Map<number | string, number>>(new Map())
@@ -849,6 +846,7 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .home {
     max-width: 100%;
+    margin: 0;
     padding: 0 12px;
     padding-bottom: 20px;
   }

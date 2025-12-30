@@ -4,7 +4,6 @@ export class ExportService {
   async exportAllData(format: 'json' | 'csv' = 'json'): Promise<Blob> {
     const translations = await db.translations.toArray()
     const progress = await db.progress.toArray()
-    const achievements = progress[0]?.achievements || []
 
     const exportData = {
       version: '1.0',

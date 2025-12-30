@@ -185,7 +185,27 @@
             </div>
             <div class="record-content">
               <div class="record-chinese">{{ item.chineseText }}</div>
-              <div class="record-english">{{ item.englishText }}</div>
+              <div class="record-english">
+                <span
+                  v-for="(word, index) in item.words"
+                  :key="index"
+                  :class="['word-item', { 'word-highlight': wordIndexMap.get(item.id || 0) === index }]"
+                  @click="handleWordClick(word)"
+                >
+                  {{ word }}
+                </span>
+              </div>
+            </div>
+            <div class="record-actions">
+              <el-button 
+                size="small" 
+                circle 
+                :type="isPlaying === item.id ? 'primary' : 'default'"
+                @click="handlePlayPause(item)"
+              >
+                <el-icon v-if="isPlaying === item.id"><VideoPause /></el-icon>
+                <el-icon v-else><VideoPlay /></el-icon>
+              </el-button>
             </div>
           </div>
         </div>
@@ -197,9 +217,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useProgressStore } from '@/stores/progress'
+import { useVoiceStore } from '@/stores/voice'
+import { speechService } from '@/services/speech'
+import { VideoPlay, VideoPause } from '@element-plus/icons-vue'
 import { db } from '@/services/db'
 
 const progressStore = useProgressStore()
+const voiceStore = useVoiceStore()
 
 const calendarDate = ref(new Date())
 const studiedDates = ref<Set<string>>(new Set())
@@ -208,6 +232,8 @@ const dateDetailVisible = ref(false)
 const selectedDate = ref('')
 const loadingDateDetail = ref(false)
 const dateTranslations = ref<any[]>([])
+const isPlaying = ref<number | null>(null)
+const wordIndexMap = ref<Map<number, number>>(new Map())
 
 const allAchievements = computed(() => progressStore.getAllAchievements())
 
@@ -362,9 +388,12 @@ async function handleDateClick(dateStr: string) {
       .between(startDate.toISOString(), endDate.toISOString())
       .toArray()
     
-    dateTranslations.value = translations.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    dateTranslations.value = translations
+      .map(t => ({
+        ...t,
+        words: t.englishText.split(/\s+/)
+      }))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   } catch (error) {
     console.error('加载日期详情失败:', error)
   } finally {
@@ -375,6 +404,39 @@ async function handleDateClick(dateStr: string) {
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr)
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+function handlePlayPause(item: any) {
+  if (isPlaying.value === item.id) {
+    speechService.pause()
+    isPlaying.value = null
+  } else {
+    speechService.stop()
+    isPlaying.value = item.id
+    wordIndexMap.value.set(item.id || 0, -1)
+    speechService.speak(item.englishText, {
+      voiceName: voiceStore.settings.selectedVoice,
+      rate: voiceStore.settings.rate,
+      pitch: voiceStore.settings.pitch,
+      onWordBoundary: (wordIndex: number) => {
+        wordIndexMap.value.set(item.id || 0, wordIndex)
+      },
+      onEnd: () => {
+        wordIndexMap.value.set(item.id || 0, -1)
+        isPlaying.value = null
+      }
+    })
+  }
+}
+
+function handleWordClick(word: string) {
+  speechService.stop()
+  isPlaying.value = null
+  speechService.speak(word, {
+    voiceName: voiceStore.settings.selectedVoice,
+    rate: voiceStore.settings.rate,
+    pitch: voiceStore.settings.pitch
+  })
 }
 
 watch(calendarDate, async () => {
@@ -696,6 +758,36 @@ onMounted(async () => {
   color: #4a90e2;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.word-item {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.word-item:hover {
+  background: #dbeafe;
+}
+
+.word-highlight {
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.record-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.record-actions .el-button {
+  min-width: 40px;
+  height: 40px;
 }
 
 @media (max-width: 768px) {

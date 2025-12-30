@@ -1,5 +1,3 @@
-import type { Translation } from '@/types'
-
 export class TranslationService {
   private apiUrl = 'https://api.mymemory.translated.net/get'
 
@@ -21,7 +19,7 @@ export class TranslationService {
     }
   }
 
-  async translateWithKeywords(chineseText: string, category: string = '日常'): Promise<{
+  async translateWithKeywords(chineseText: string): Promise<{
     englishText: string
     keywords: string
   }> {
