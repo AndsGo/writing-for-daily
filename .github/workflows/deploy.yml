@@ -1,4 +1,3 @@
-h:\code_demo\writing_for_daily\.github\workflows\deploy.yml
 name: Deploy to GitHub Pages
 
 on:
