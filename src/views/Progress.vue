@@ -130,18 +130,72 @@
       
       <el-calendar v-model="calendarDate">
         <template #date-cell="{ data }">
-          <div class="calendar-cell">
+          <div 
+            class="calendar-cell" 
+            :class="{ 'calendar-cell-clickable': hasStudiedOnDate(data.day) }"
+            @click="handleDateClick(data.day)"
+          >
             <div class="calendar-date">{{ data.day.split('-').slice(2).join('-') }}</div>
             <div v-if="hasStudiedOnDate(data.day)" class="calendar-dot"></div>
           </div>
         </template>
       </el-calendar>
     </el-card>
+
+    <el-dialog
+      v-model="dateDetailVisible"
+      :title="`${selectedDate} 学习详情`"
+      width="90%"
+      :style="{ maxWidth: '800px' }"
+    >
+      <div v-if="loadingDateDetail" class="loading-container">
+        <el-skeleton :rows="5" animated />
+      </div>
+      
+      <div v-else-if="dateTranslations.length === 0" class="empty-state">
+        <el-empty description="该日期没有学习记录" />
+      </div>
+      
+      <div v-else class="date-detail-content">
+        <div class="detail-stats">
+          <div class="detail-stat-item">
+            <span class="stat-label">📝 输入条数</span>
+            <span class="stat-value">{{ dateTranslations.length }}</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="stat-label">📚 新学词汇</span>
+            <span class="stat-value">{{ dateNewWords }}</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="stat-label">🔊 播放次数</span>
+            <span class="stat-value">{{ datePlayCount }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-records">
+          <h4>学习记录</h4>
+          <div
+            v-for="item in dateTranslations"
+            :key="item.id"
+            class="detail-record-item"
+          >
+            <div class="record-header">
+              <el-tag size="small">{{ item.category }}</el-tag>
+              <span class="record-time">{{ formatTime(item.createdAt) }}</span>
+            </div>
+            <div class="record-content">
+              <div class="record-chinese">{{ item.chineseText }}</div>
+              <div class="record-english">{{ item.englishText }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useProgressStore } from '@/stores/progress'
 import { db } from '@/services/db'
 
@@ -150,6 +204,11 @@ const progressStore = useProgressStore()
 const calendarDate = ref(new Date())
 const studiedDates = ref<Set<string>>(new Set())
 
+const dateDetailVisible = ref(false)
+const selectedDate = ref('')
+const loadingDateDetail = ref(false)
+const dateTranslations = ref<any[]>([])
+
 const allAchievements = computed(() => progressStore.getAllAchievements())
 
 const unlockedCount = computed(() => {
@@ -157,6 +216,15 @@ const unlockedCount = computed(() => {
 })
 
 const progress = computed(() => progressStore.progress)
+
+const dateNewWords = computed(() => {
+  const allWords = dateTranslations.value.flatMap(t => t.keywords.split(','))
+  return new Set(allWords).size
+})
+
+const datePlayCount = computed(() => {
+  return dateTranslations.value.reduce((sum, t) => sum + t.playCount, 0)
+})
 
 function getAchievementIcon(id: string): string {
   const icons: Record<string, string> = {
@@ -238,27 +306,80 @@ const streakMessage = computed(() => {
 })
 
 async function loadStudiedDates() {
-  const startOfMonth = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth(), 1)
-  const endOfMonth = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth() + 1, 0)
+  const year = calendarDate.value.getFullYear()
+  const month = calendarDate.value.getMonth()
+  
+  const startOfMonth = new Date(year, month, 1)
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+  
+  console.log('查询日期范围(本地时间):', {
+    start: startOfMonth.toLocaleString(),
+    end: endOfMonth.toLocaleString()
+  })
   
   const translations = await db.translations
     .where('createdAt')
-    .between(startOfMonth, endOfMonth)
+    .between(startOfMonth.toISOString(), endOfMonth.toISOString())
     .toArray()
+  
+  console.log('查询到的记录数:', translations.length)
   
   const dates = new Set<string>()
   translations.forEach(t => {
-    const date = new Date(t.createdAt).toISOString().split('T')[0]
-    dates.add(date)
+    const date = new Date(t.createdAt)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    dates.add(dateStr)
+    console.log('学习日期:', dateStr, '原始UTC时间:', t.createdAt, '本地时间:', date.toLocaleString())
   })
   
   studiedDates.value = dates
+  console.log('所有学习日期:', Array.from(dates))
 }
 
 function hasStudiedOnDate(dateStr: string): boolean {
-  const date = new Date(dateStr).toISOString().split('T')[0]
-  return studiedDates.value.has(date)
+  const hasDate = studiedDates.value.has(dateStr)
+  console.log(`检查日期 ${dateStr}: ${hasDate}`)
+  return hasDate
 }
+
+async function handleDateClick(dateStr: string) {
+  if (!hasStudiedOnDate(dateStr)) return
+  
+  selectedDate.value = dateStr
+  dateDetailVisible.value = true
+  loadingDateDetail.value = true
+  dateTranslations.value = []
+  
+  try {
+    const startDate = new Date(dateStr + 'T00:00:00')
+    const endDate = new Date(dateStr + 'T23:59:59')
+    
+    const translations = await db.translations
+      .where('createdAt')
+      .between(startDate.toISOString(), endDate.toISOString())
+      .toArray()
+    
+    dateTranslations.value = translations.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+  } catch (error) {
+    console.error('加载日期详情失败:', error)
+  } finally {
+    loadingDateDetail.value = false
+  }
+}
+
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+watch(calendarDate, async () => {
+  await loadStudiedDates()
+})
 
 onMounted(async () => {
   await progressStore.loadProgress()
@@ -473,6 +594,16 @@ onMounted(async () => {
   height: 100%;
 }
 
+.calendar-cell-clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-cell-clickable:hover {
+  background: #e6f7ff;
+  border-radius: 8px;
+}
+
 .calendar-date {
   font-size: 14px;
 }
@@ -483,6 +614,88 @@ onMounted(async () => {
   background: #52c41a;
   border-radius: 50%;
   margin-top: 4px;
+}
+
+.loading-container {
+  padding: 20px;
+}
+
+.empty-state {
+  padding: 60px 0;
+}
+
+.date-detail-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.detail-stat-item {
+  text-align: center;
+}
+
+.detail-stat-item .stat-label {
+  display: block;
+  font-size: 14px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.detail-stat-item .stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4a90e2;
+}
+
+.detail-records h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #262626;
+}
+
+.detail-record-item {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.record-time {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.record-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-chinese {
+  color: #262626;
+  font-size: 14px;
+}
+
+.record-english {
+  color: #4a90e2;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 @media (max-width: 768px) {

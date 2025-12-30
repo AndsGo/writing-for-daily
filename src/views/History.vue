@@ -22,6 +22,13 @@
           <el-option label="购物" value="购物" />
           <el-option label="旅游" value="旅游" />
         </el-select>
+
+        <el-select v-model="selectedTimeRange" @change="handleTimeFilter" class="time-select">
+          <el-option label="全部时间" value="all" />
+          <el-option label="今天" value="today" />
+          <el-option label="最近7天" value="week" />
+          <el-option label="最近30天" value="month" />
+        </el-select>
       </div>
     </el-card>
 
@@ -58,8 +65,14 @@
         </div>
         
         <div class="history-actions">
-          <el-button size="small" circle @click="handlePlay(item)">
-            <el-icon><VideoPlay /></el-icon>
+          <el-button 
+            size="small" 
+            circle 
+            :type="isPlaying === item.id ? 'primary' : 'default'"
+            @click="handlePlayPause(item)"
+          >
+            <el-icon v-if="isPlaying === item.id"><VideoPause /></el-icon>
+            <el-icon v-else><VideoPlay /></el-icon>
           </el-button>
           <el-button 
             size="small" 
@@ -81,10 +94,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, VideoPlay, Star, Delete } from '@element-plus/icons-vue'
+import { Search, VideoPlay, VideoPause, Star, Delete } from '@element-plus/icons-vue'
 import { useHistoryStore } from '@/stores/history'
 import { useVoiceStore } from '@/stores/voice'
 import { speechService } from '@/services/speech'
+import { db } from '@/services/db'
 
 interface TranslationWithWords {
   id?: number
@@ -106,19 +120,58 @@ const voiceStore = useVoiceStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref('全部')
+const selectedTimeRange = ref('all')
 const wordIndexMap = ref<Map<number, number>>(new Map())
 const translations = ref<TranslationWithWords[]>([])
 const loading = ref(false)
+const isPlaying = ref<number | null>(null)
 
 async function loadData() {
   loading.value = true
   try {
+    let result: any[] = []
+    
     if (searchQuery.value.trim()) {
-      await historyStore.searchTranslations(searchQuery.value)
+      const all = await db.translations.toArray()
+      result = all.filter(t => 
+        t.chineseText.includes(searchQuery.value) || 
+        t.englishText.toLowerCase().includes(searchQuery.value.toLowerCase())
+      )
+    } else if (selectedCategory.value !== '全部') {
+      result = await db.translations
+        .where('category')
+        .equals(selectedCategory.value)
+        .reverse()
+        .toArray()
     } else {
-      await historyStore.filterByCategory(selectedCategory.value)
+      result = await db.translations
+        .orderBy('createdAt')
+        .reverse()
+        .toArray()
     }
-    translations.value = historyStore.translations.map(t => ({
+
+    if (selectedTimeRange.value !== 'all') {
+      const now = new Date()
+      let startDate: Date
+      
+      switch (selectedTimeRange.value) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          break
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          break
+        default:
+          startDate = new Date(0)
+      }
+      
+      result = result.filter(t => new Date(t.createdAt) >= startDate)
+    }
+
+    translations.value = result.map(t => ({
       ...t,
       words: t.englishText.split(/\s+/),
       currentWordIndex: -1
@@ -137,22 +190,36 @@ async function handleFilter() {
   await loadData()
 }
 
-function handlePlay(item: any) {
-  wordIndexMap.value.set(item.id || 0, -1)
-  speechService.speak(item.englishText, {
-    voiceName: voiceStore.settings.selectedVoice,
-    rate: voiceStore.settings.rate,
-    pitch: voiceStore.settings.pitch,
-    onWordBoundary: (wordIndex: number) => {
-      wordIndexMap.value.set(item.id || 0, wordIndex)
-    },
-    onEnd: () => {
-      wordIndexMap.value.set(item.id || 0, -1)
-    }
-  })
+async function handleTimeFilter() {
+  await loadData()
+}
+
+function handlePlayPause(item: any) {
+  if (isPlaying.value === item.id) {
+    speechService.pause()
+    isPlaying.value = null
+  } else {
+    speechService.stop()
+    isPlaying.value = item.id
+    wordIndexMap.value.set(item.id || 0, -1)
+    speechService.speak(item.englishText, {
+      voiceName: voiceStore.settings.selectedVoice,
+      rate: voiceStore.settings.rate,
+      pitch: voiceStore.settings.pitch,
+      onWordBoundary: (wordIndex: number) => {
+        wordIndexMap.value.set(item.id || 0, wordIndex)
+      },
+      onEnd: () => {
+        wordIndexMap.value.set(item.id || 0, -1)
+        isPlaying.value = null
+      }
+    })
+  }
 }
 
 function handleWordClick(word: string) {
+  speechService.stop()
+  isPlaying.value = null
   speechService.speak(word, {
     voiceName: voiceStore.settings.selectedVoice,
     rate: voiceStore.settings.rate,
@@ -172,6 +239,11 @@ async function handleDelete(id: number) {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    
+    if (isPlaying.value === id) {
+      speechService.stop()
+      isPlaying.value = null
+    }
     
     await historyStore.deleteTranslation(id)
     ElMessage.success('删除成功')
@@ -203,7 +275,7 @@ function formatTime(dateStr: string) {
 }
 
 onMounted(async () => {
-  await historyStore.loadTranslations()
+  await loadData()
 })
 </script>
 
@@ -217,17 +289,42 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
+.search-card :deep(.el-card__body) {
+  padding: 20px;
+}
+
 .search-bar {
   display: flex;
   gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
+  min-width: 200px;
+}
+
+.search-input :deep(.el-input__wrapper) {
+  height: 40px;
 }
 
 .category-select {
   width: 120px;
+  flex-shrink: 0;
+}
+
+.category-select :deep(.el-select__wrapper) {
+  height: 40px;
+}
+
+.time-select {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.time-select :deep(.el-select__wrapper) {
+  height: 40px;
 }
 
 .loading-container {
@@ -248,6 +345,18 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.history-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.history-card:active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .history-content {
@@ -259,16 +368,19 @@ onMounted(async () => {
 
 .history-chinese {
   color: #262626;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .history-english {
   color: #4a90e2;
   font-size: 16px;
   line-height: 1.8;
-  padding: 8px;
+  padding: 12px;
   background: #f9fafb;
-  border-radius: 4px;
+  border-radius: 8px;
+  border-left: 4px solid #4a90e2;
 }
 
 .word-item {
@@ -304,30 +416,68 @@ onMounted(async () => {
 .history-actions {
   display: flex;
   gap: 8px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.history-card:hover .history-actions {
+  opacity: 1;
 }
 
 .history-actions .el-button {
   width: 44px;
   height: 44px;
+  transition: all 0.3s ease;
+}
+
+.history-actions .el-button:hover {
+  transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
   .history {
     max-width: 100%;
+    padding: 0 12px;
     padding-bottom: 20px;
+  }
+
+  .search-card {
+    margin-bottom: 16px;
+  }
+
+  .search-card :deep(.el-card__body) {
+    padding: 16px;
   }
 
   .search-bar {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
   }
 
   .search-input {
     width: 100%;
+    min-width: auto;
+  }
+
+  .search-input :deep(.el-input__wrapper) {
+    height: 44px;
   }
 
   .category-select {
     width: 100%;
+  }
+
+  .category-select :deep(.el-select__wrapper) {
+    height: 44px;
+  }
+
+  .time-select {
+    width: 100%;
+  }
+
+  .time-select :deep(.el-select__wrapper) {
+    height: 44px;
   }
 
   .history-card {

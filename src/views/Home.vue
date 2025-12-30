@@ -476,6 +476,26 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.scene-selector-btn {
+  min-width: 100px;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 12px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-shrink: 0;
+}
+
+.scene-selector-btn .dropdown-icon {
+  font-size: 12px;
+  color: #909399;
 }
 
 .interim-result {
@@ -553,13 +573,14 @@ onMounted(async () => {
 
 ::v-deep .voice-btn {
   min-width: 100px;
-  height: 32px !important;
-  line-height: 32px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   padding: 0 12px !important;
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0;
 }
 
 ::v-deep .voice-btn .el-icon {
@@ -579,30 +600,14 @@ onMounted(async () => {
 
 ::v-deep .translate-btn {
   min-width: 100px;
-  height: 32px !important;
-  line-height: 32px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   padding: 0 12px !important;
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-}
-
-.scene-selector-btn {
-  min-width: 100px;
-  height: 32px !important;
-  line-height: 32px !important;
-  padding: 0 12px !important;
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-}
-
-.scene-selector-btn .dropdown-icon {
-  font-size: 12px;
-  color: #909399;
+  flex-shrink: 0;
 }
 
 .scene-tips-popover {
@@ -844,7 +849,12 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .home {
     max-width: 100%;
+    padding: 0 12px;
     padding-bottom: 20px;
+  }
+
+  .input-card {
+    margin-bottom: 16px;
   }
 
   .input-actions {
@@ -853,8 +863,13 @@ onMounted(async () => {
     gap: 12px;
   }
 
-  .category-select {
+  .scene-selector-btn {
     width: 100%;
+    min-width: auto;
+    height: 48px !important;
+    line-height: 48px !important;
+    padding: 0 12px !important;
+    font-size: 16px;
   }
 
   ::v-deep .voice-btn {
@@ -864,10 +879,15 @@ onMounted(async () => {
     line-height: 48px !important;
     padding: 0 12px !important;
     font-size: 16px;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
+  }
+
+  ::v-deep .translate-btn {
+    width: 100%;
+    min-width: auto;
+    height: 48px !important;
+    line-height: 48px !important;
+    padding: 0 12px !important;
+    font-size: 16px;
   }
 
   ::v-deep .voice-btn .el-icon {
@@ -883,19 +903,6 @@ onMounted(async () => {
     align-items: center !important;
     justify-content: center !important;
     line-height: 1 !important;
-  }
-
-  ::v-deep .translate-btn {
-    width: 100%;
-    min-width: auto;
-    height: 48px !important;
-    line-height: 48px !important;
-    padding: 0 12px !important;
-    font-size: 16px;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
   }
 
   .interim-result {

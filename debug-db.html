@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据库调试工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: #333; }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .section h2 {
+      margin-top: 0;  
+      color: #4a90e2;
+    }
+    .record {
+      background: #f5f5f5;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 3px;
+    }
+    .record strong { color: #333; }
+    .record .time { color: #666; font-size: 12px; }
+    button {
+      padding: 10px 20px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #357abd; }
+    .highlight { background: #fff3cd; padding: 2px 5px; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>🔍 数据库调试工具</h1>
+  
+  <div class="section">
+    <h2>操作</h2>
+    <button onclick="checkAllRecords()">查看所有记录</button>
+    <button onclick="checkCurrentMonth()">查看当前月记录</button>
+    <button onclick="checkDateRange()">检查日期范围</button>
+    <button onclick="clearConsole()">清空控制台</button>
+  </div>
+
+  <div class="section">
+    <h2>系统信息</h2>
+    <div id="systemInfo"></div>
+  </div>
+
+  <div class="section">
+    <h2>查询结果</h2>
+    <div id="results"></div>
+  </div>
+
+  <script type="module">
+    import Dexie from 'https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.mjs';
+
+    class EnglishLearningDB extends Dexie {
+      translations;
+      progress;
+      dailySummaries;
+
+      constructor() {
+        super('EnglishLearningDB');
+        this.version(1).stores({
+          translations: '++id,createdAt,category,isFavorite',
+          progress: 'id',
+          dailySummaries: '++id,date'
+        });
+      }
+    }
+
+    const db = new EnglishLearningDB();
+
+    function displaySystemInfo() {
+      const now = new Date();
+      const info = `
+        <p><strong>当前时间:</strong> ${now.toLocaleString()}</p>
+        <p><strong>当前时区:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+        <p><strong>UTC偏移:</strong> ${now.getTimezoneOffset()} 分钟</p>
+        <p><strong>当前年份:</strong> ${now.getFullYear()}</p>
+        <p><strong>当前月份:</strong> ${now.getMonth() + 1}</p>
+        <p><strong>当前日期:</strong> ${now.getDate()}</p>
+      `;
+      document.getElementById('systemInfo').innerHTML = info;
+    }
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function displayRecords(records, title) {
+      let html = `<h3>${title} (${records.length} 条记录)</h3>`;
+      
+      if (records.length === 0) {
+        html += '<p class="error">没有找到记录</p>';
+      } else {
+        records.forEach(record => {
+          const createdDate = new Date(record.createdAt);
+          const localDate = formatDate(createdDate);
+          html += `
+            <div class="record">
+              <strong>ID:</strong> ${record.id}<br>
+              <strong>中文:</strong> ${record.chineseText}<br>
+              <strong>英文:</strong> ${record.englishText}<br>
+              <strong>分类:</strong> ${record.category}<br>
+              <div class="time">
+                <strong>UTC时间:</strong> ${record.createdAt}<br>
+                <strong>本地时间:</strong> ${createdDate.toLocaleString()}<br>
+                <strong>日期字符串:</strong> <span class="highlight">${localDate}</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      document.getElementById('results').innerHTML = html;
+    }
+
+    async function checkAllRecords() {
+      console.log('=== 查看所有记录 ===');
+      const records = await db.translations.toArray();
+      console.log('总记录数:', records.length);
+      console.log('所有记录:', records);
+      displayRecords(records, '所有记录');
+    }
+
+    async function checkCurrentMonth() {
+      console.log('=== 查看当前月记录 ===');
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      
+      const startOfMonth = new Date(year, month, 1);
+      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+      
+      console.log('查询范围(本地):', {
+        start: startOfMonth.toLocaleString(),
+        end: endOfMonth.toLocaleString()
+      });
+      console.log('查询范围(ISO):', {
+        start: startOfMonth.toISOString(),
+        end: endOfMonth.toISOString()
+      });
+      
+      const records = await db.translations
+        .where('createdAt')
+        .between(startOfMonth.toISOString(), endOfMonth.toISOString())
+        .toArray();
+      
+      console.log('查询到的记录数:', records.length);
+      console.log('查询到的记录:', records);
+      displayRecords(records, '当前月记录');
+    }
+
+    async function checkDateRange() {
+      console.log('=== 检查特定日期范围 ===');
+      
+      const testDate = '2025-12-27';
+      const startDate = new Date(testDate + 'T00:00:00');
+      const endDate = new Date(testDate + 'T23:59:59');
+      
+      console.log('测试日期:', testDate);
+      console.log('查询范围(本地):', {
+        start: startDate.toLocaleString(),
+        end: endDate.toLocaleString()
+      });
+      console.log('查询范围(ISO):', {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      });
+      
+      const records = await db.translations
+        .where('createdAt')
+        .between(startDate.toISOString(), endDate.toISOString())
+        .toArray();
+      
+      console.log('查询到的记录数:', records.length);
+      console.log('查询到的记录:', records);
+      displayRecords(records, `日期 ${testDate} 的记录`);
+    }
+
+    function clearConsole() {
+      console.clear();
+      document.getElementById('results').innerHTML = '';
+    }
+
+    window.checkAllRecords = checkAllRecords;
+    window.checkCurrentMonth = checkCurrentMonth;
+    window.checkDateRange = checkDateRange;
+    window.clearConsole = clearConsole;
+
+    displaySystemInfo();
+    console.log('数据库调试工具已加载');
+    console.log('点击按钮开始检查数据');
+  </script>
+</body>
+</html>

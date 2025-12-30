@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-12-29T12:21:16.409Z",
+  "translations": [
+    {
+      "chineseText": "你好，很高兴见到你",
+      "englishText": "Hi, nice to meet you!",
+      "keywords": "nice,meet,you",
+      "category": "日常",
+      "playCount": 0,
+      "isFavorite": false,
+      "createdAt": "2025-12-27T09:15:40.931Z",
+      "updatedAt": "2025-12-27T09:15:40.931Z",
+      "id": 1
+    },
+    {
+      "chineseText": "今天天气很好",
+      "englishText": "It's a nice day.",
+      "keywords": "nice,day",
+      "category": "日常",
+      "playCount": 0,
+      "isFavorite": false,
+      "createdAt": "2025-12-27T09:30:29.315Z",
+      "updatedAt": "2025-12-27T09:30:29.315Z",
+      "id": 2
+    }
+  ],
+  "progress": {
+    "id": 1,
+    "totalDays": 0,
+    "totalTranslations": 1,
+    "totalWords": 2,
+    "totalPlays": 0,
+    "consecutiveDays": 0,
+    "lastStudyDate": "2025-12-27T08:50:34.121Z",
+    "achievements": [
+      "first_translation"
+    ]
+  },
+  "stats": {
+    "totalTranslations": 2,
+    "totalWords": 5,
+    "totalFavorites": 0
+  }
+}
